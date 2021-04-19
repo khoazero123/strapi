@@ -249,9 +249,23 @@ class Strapi {
         }
       }
 
-      // Emit started event.
+      // Get database clients
       const databaseClients = _.map(this.config.get('connections'), _.property('settings.client'));
-      await this.telemetry.send('didStartServer', { database: databaseClients });
+      // Get plugins
+      const plugins = Object.keys(this.plugins);
+      // Get providers
+      const providers = _(this.plugins)
+        .map(plugin => Object.keys(plugin.package.dependencies))
+        .flatten()
+        .filter(key => key.includes('strapi-provider-'))
+        .value();
+
+      // Emit started event.
+      await this.telemetry.send('didStartServer', {
+        database: databaseClients,
+        plugins,
+        providers,
+      });
 
       if (cb && typeof cb === 'function') {
         cb();
